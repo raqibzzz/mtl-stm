@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Montreal in an Hour — MTL Transit Map
 
-## Getting Started
+See everywhere reachable in under one hour on the STM metro and bus network. Interactive heatmap + cartogram visualization.
 
-First, run the development server:
+## What it does
+
+- **Heatmap**: Color-coded by travel time (green → yellow → orange → red)
+- **Cartogram**: Space warps so transit-adjacent areas appear visually closer
+- Click anywhere to move the origin pin; URL encodes the position as `/mtl/@lat,lon`
+
+## Deploy to Vercel (2 minutes)
+
+1. **Import the repo** at [vercel.com/new](https://vercel.com/new) → "Import Git Repository" → `raqibzzz/mtl-stm`
+2. **Add env variable**: `NEXT_PUBLIC_MAPBOX_TOKEN` = your [Mapbox public token](https://account.mapbox.com/access-tokens/) (free account)
+3. Click **Deploy** — the build auto-generates transit graph data, no extra setup needed
+
+## Local development
 
 ```bash
+# 1. Create env file and add your Mapbox token
+echo 'NEXT_PUBLIC_MAPBOX_TOKEN=pk.your_token_here' > .env.local
+
+# 2. Install deps
+npm install
+
+# 3. Start dev server (auto-generates synthetic metro data on first run)
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+To use real STM bus + metro data (requires network):
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run setup   # downloads STM GTFS zip (~60MB) and builds graph.bin
+npm run dev
+```
 
-## Learn More
+## How it works
 
-To learn more about Next.js, take a look at the following resources:
+**Data pipeline (build time):**
+1. `scripts/generate-test-gtfs.ts` creates synthetic Montreal metro GTFS (65 stations)
+2. `scripts/build-graph.ts` parses GTFS → Compressed Sparse Row binary (`public/graph.bin`, ~2KB synthetic / ~400KB real)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**Runtime:**
+1. Browser fetches `graph.bin`, parses into `TransitGraph` with Flatbush spatial index
+2. Click → Dijkstra shortest-path from origin across transit network
+3. IDW interpolation over 80×80 grid → travel-time field
+4. WebGL custom layer renders colored mesh; GLSL fragment shader applies color ramp
+5. Cartogram mode: IDW warp field displaces grid vertices proportional to travel-time
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Tech stack
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Next.js 16** (App Router, Turbopack)
+- **Mapbox GL JS v3** — custom `CustomLayerInterface` WebGL layers
+- **Flatbush** — R-tree for O(log n) nearest-stop queries
+- **Tailwind CSS v4**
+- STM GTFS static feed (offline schedule data, no transit API key needed)
