@@ -1,0 +1,44 @@
+{
+  "name": "mtl-stm",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "setup": "tsx scripts/download-gtfs.ts && tsx scripts/build-graph.ts",
+    "build:graph": "tsx scripts/build-graph.ts",
+    "setup:test": "tsx scripts/generate-test-gtfs.ts && tsx scripts/build-graph.ts",
+    "prebuild": "node -e \"require('fs').existsSync('public/graph.bin') || (process.exit(1))\" || npm run setup:test"
+  },
+  "dependencies": {
+    "@turf/bearing": "^7.3.5",
+    "@turf/destination": "^7.3.5",
+    "@turf/distance": "^7.3.5",
+    "@turf/helpers": "^7.3.5",
+    "comlink": "^4.4.2",
+    "fflate": "^0.8.2",
+    "flatbush": "^4.5.1",
+    "mapbox-gl": "^3.23.1",
+    "ml-matrix": "^6.12.2",
+    "next": "16.2.4",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-map-gl": "^8.1.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/mapbox-gl": "^3.4.1",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "csv-parse": "^6.2.1",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.4",
+    "extract-zip": "^2.0.1",
+    "tailwindcss": "^4",
+    "tsx": "^4.21.0",
+    "typescript": "^5"
+  }
+}
