@@ -4,7 +4,9 @@ import type { LatLon } from '@/lib/types';
 import DynamicMap from '@/components/DynamicMap';
 
 function parseCoords(coords: string): LatLon | null {
-  const parts = coords.split(',');
+  // Strip leading '@' in case the proxy rewrite didn't run (e.g. URL-encoded as %40)
+  const s = coords.startsWith('@') ? coords.slice(1) : coords;
+  const parts = s.split(',');
   if (parts.length !== 2) return null;
   const lat = parseFloat(parts[0]);
   const lon = parseFloat(parts[1]);
@@ -22,7 +24,7 @@ export default async function MtlPage({ params }: Props) {
   const origin = parseCoords(coords);
 
   if (!origin) {
-    redirect(`/mtl/@${DEFAULT_ORIGIN.lat},${DEFAULT_ORIGIN.lon}`);
+    redirect(`/mtl/${DEFAULT_ORIGIN.lat},${DEFAULT_ORIGIN.lon}`);
   }
 
   return (
